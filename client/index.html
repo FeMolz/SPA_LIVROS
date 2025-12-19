@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/client/css/style.css">
+    <title>Gerenciador de Livros</title>
+</head>
+
+<body>
+    <header>
+        <nav class="sidebar">
+            <div class="logo">
+                <img src="../client/assets/img/books.png" alt="">
+            </div>
+            <ul>
+                <li class="itens-sidebar active">
+                    <i class="bi bi-clock-history"></i>
+                    <a href="#allYears">All Years</a>
+                </li>
+                <li class="itens-sidebar">
+                    <i class="bi bi-journal-bookmark"></i>
+                    <a href="#genres">Genres</a>
+                </li>
+                <li class="itens-sidebar">
+                    <i class="bi bi-star"></i>
+                    <a href="#favorites">Favorites</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="allYears" class="active-section">
+        </section>
+
+        <section id="favorites">
+            <h2 class="section-title">My Favorites</h2>
+            <div id="favoritesList" class="books-grid">
+            </div>
+        </section>
+
+        <section id="genres">
+            <h2 class="section-title">Browse by Genre</h2>
+            <div id="genreFilters" class="genre-filters">
+            </div>
+            <div id="genresList" class="books-grid">
+            </div>
+        </section>
+    </main>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('registerModal')">&times;</span>
+            <h2><span id="modalAction">Register</span> Book for <span id="modalYear"></span></h2>
+            <form id="registerForm">
+                <input type="hidden" id="bookId" name="bookId">
+                <input type="hidden" id="bookYear" name="anoLeitura">
+                <div class="form-group">
+                    <label for="titulo">Title</label>
+                    <input type="text" id="titulo" name="titulo" required>
+                </div>
+                <div class="form-group">
+                    <label for="autor">Author (comma separated)</label>
+                    <input type="text" id="autor" name="autor" required>
+                </div>
+                <div class="form-group">
+                    <label for="editora">Publisher</label>
+                    <input type="text" id="editora" name="editora">
+                </div>
+                <div class="form-group">
+                    <label for="anoPublicacao">Publication Year</label>
+                    <input type="number" id="anoPublicacao" name="anoPublicacao">
+                </div>
+                <div class="form-group">
+                    <label for="genero">Genres (comma separated)</label>
+                    <input type="text" id="genero" name="genero">
+                </div>
+                <div class="form-group">
+                    <label for="numeroPaginas">Pages</label>
+                    <input type="number" id="numeroPaginas" name="numeroPaginas">
+                </div>
+                <div class="form-group">
+                    <label for="nota">Rating (0-10)</label>
+                    <input type="number" id="nota" name="nota" min="0" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="capaUrl">Cover URL</label>
+                    <input type="url" id="capaUrl" name="capaUrl">
+                </div>
+                <div class="form-group">
+                    <label for="sinopse">Synopsis</label>
+                    <textarea id="sinopse" name="sinopse"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="Lido">Read</option>
+                        <option value="Lendo">Reading</option>
+                        <option value="Quero Ler">Want to Read</option>
+                        <option value="Abandonado">Abandoned</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Save Book</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content details-content">
+            <span class="close-btn" onclick="closeModal('detailsModal')">&times;</span>
+            <div id="bookDetails">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
