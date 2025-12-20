@@ -59,6 +59,11 @@ const bookSchema = new Schema({
     type: Number,
     min: 0,
     max: 10
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 }, {
   timestamps: true

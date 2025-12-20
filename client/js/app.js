@@ -2,18 +2,77 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:3000/books'
     : '/books';
 
+const AUTH_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api/user'
+    : '/api/user';
+
+function getToken() {
+    return localStorage.getItem('auth-token');
+}
+
+function getAuthHeaders() {
+    const token = getToken();
+    return {
+        'Content-Type': 'application/json',
+        'auth-token': token
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    fetchBooks();
+    checkAuth();
     setupNavigation();
 
     document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
+
+    // Auth Event Listeners
+    document.getElementById('userLoginForm').addEventListener('submit', handleLogin);
+    document.getElementById('userRegisterForm').addEventListener('submit', handleRegisterUser);
+    document.getElementById('forgotForm').addEventListener('submit', handleForgotPassword);
+    document.getElementById('resetForm').addEventListener('submit', handleResetPassword);
 });
+
+function checkAuth() {
+    const token = getToken();
+    const authSection = document.getElementById('authSection');
+    const sidebar = document.querySelector('.sidebar');
+    const main = document.querySelector('main');
+
+    if (!token) {
+        authSection.style.display = 'flex';
+        sidebar.style.display = 'none';
+        main.style.display = 'none';
+    } else {
+        authSection.style.display = 'none';
+        sidebar.style.display = 'flex';
+        main.style.display = 'block';
+        fetchBooks();
+    }
+}
+// ... (skip lines) ...
+// Auth Functions
+window.switchAuthTab = (tab) => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+
+    if (tab === 'login') {
+        document.querySelectorAll('.auth-tab')[0].classList.add('active');
+        document.getElementById('userLoginForm').classList.add('active');
+    } else {
+        document.querySelectorAll('.auth-tab')[1].classList.add('active');
+        document.getElementById('userRegisterForm').classList.add('active');
+    }
+};
 
 let allBooks = []; // Store books locally to easier filtering without refetching constantly
 
 async function fetchBooks() {
     try {
-        const response = await fetch(`${API_URL}`);
+        const token = getToken();
+        if (!token) return;
+
+        const response = await fetch(`${API_URL}`, {
+            headers: { 'auth-token': token }
+        });
         if (!response.ok) throw new Error('Failed to fetch books');
         allBooks = await response.json();
         renderAllYears(allBooks);
@@ -240,7 +299,7 @@ async function toggleFavorite(book, iconElement) {
     try {
         const response = await fetch(`${API_URL}/${book._id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ isFavorite: newStatus })
         });
 
@@ -374,13 +433,13 @@ async function handleRegisterSubmit(e) {
         if (bookId) {
             response = await fetch(`${API_URL}/${bookId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(bookData)
             });
         } else {
             response = await fetch(API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(bookData)
             });
         }
@@ -404,7 +463,8 @@ async function deleteBook(id) {
 
     try {
         const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: { 'auth-token': getToken() }
         });
 
         if (response.ok) {
@@ -417,3 +477,131 @@ async function deleteBook(id) {
         console.error('Error deleting book:', error);
     }
 }
+// Auth Functions
+window.switchAuthTab = (tab) => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.querySelector('.auth-tabs').style.display = 'flex';
+
+    if (tab === 'login') {
+        document.querySelectorAll('.auth-tab')[0].classList.add('active');
+        document.getElementById('userLoginForm').classList.add('active');
+    } else if (tab === 'register') {
+        document.querySelectorAll('.auth-tab')[1].classList.add('active');
+        document.getElementById('userRegisterForm').classList.add('active');
+    } else if (tab === 'forgot') {
+        document.querySelector('.auth-tabs').style.display = 'none';
+        document.getElementById('forgotForm').classList.add('active');
+    } else if (tab === 'reset') {
+        document.querySelector('.auth-tabs').style.display = 'none';
+        document.getElementById('resetForm').classList.add('active');
+    }
+};
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+        const response = await fetch(`${AUTH_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const token = await response.text();
+            localStorage.setItem('auth-token', token);
+            checkAuth();
+        } else {
+            const err = await response.text();
+            alert('Login failed: ' + err);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login error');
+    }
+}
+
+async function handleRegisterUser(e) {
+    e.preventDefault();
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+        const response = await fetch(`${AUTH_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        if (response.ok) {
+            alert('Registration successful! Please login.');
+            switchAuthTab('login');
+        } else {
+            const err = await response.text();
+            alert('Registration failed: ' + err);
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert('Registration error');
+    }
+}
+
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmail').value;
+
+    try {
+        const response = await fetch(`${AUTH_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+            alert('Code sent to your email!');
+            document.getElementById('resetEmail').value = email;
+            switchAuthTab('reset');
+        } else {
+            const err = await response.text();
+            alert('Error: ' + err);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to send code');
+    }
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('resetEmail').value;
+    const code = document.getElementById('resetCode').value;
+    const newPassword = document.getElementById('newPassword').value;
+
+    try {
+        const response = await fetch(`${AUTH_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, newPassword })
+        });
+
+        if (response.ok) {
+            alert('Password updated successfully! Please login.');
+            switchAuthTab('login');
+        } else {
+            const err = await response.text();
+            alert('Error: ' + err);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to reset password');
+    }
+}
+
+window.logout = () => {
+    localStorage.removeItem('auth-token');
+    checkAuth();
+};

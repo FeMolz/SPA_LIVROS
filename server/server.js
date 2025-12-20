@@ -12,12 +12,16 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
+
+import authRoutes from './routes/authRoutes.js';
+import verifyToken from './middleware/authMiddleware.js';
 
 app.use(express.json());
 app.use(cors());
 
-app.use('/books', bookRoutes);
+app.use('/api/user', authRoutes);
+app.use('/books', verifyToken, bookRoutes);
 
 app.use(express.static(path.join(__dirname, '../client')));
 

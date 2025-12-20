@@ -720,3 +720,95 @@ section.active-section {
     border-color: var(--primary-color);
     box-shadow: 0 4px 10px rgba(125, 95, 255, 0.4);
 }
+
+/* Auth Section */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background-dark);
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(125, 95, 255, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(253, 121, 168, 0.2) 0%, transparent 40%);
+    z-index: 2000;
+    /* Above everything */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.auth-box {
+    background: rgba(30, 30, 46, 0.8);
+    backdrop-filter: blur(20px);
+    padding: 40px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    border: var(--glass-border);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.auth-header img {
+    width: 80px;
+    margin-bottom: 20px;
+}
+
+.auth-header h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    border: none;
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+.auth-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.auth-tab.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 10px rgba(125, 95, 255, 0.3);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+.logout-btn {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+
+.logout-btn:hover {
+    color: var(--danger);
+}

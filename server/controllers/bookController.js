@@ -6,7 +6,7 @@ const bookController = {
     // POST
     criar: async (req, res) => {
         try {
-            const newBook = await Book.create(req.body);
+            const newBook = await Book.create({ ...req.body, user: req.user._id });
             res.status(201).json(newBook);
         } catch (error) {
             res.status(400).json({ mensagem: "Erro ao cadastrar livro", erro: error.message });
@@ -16,7 +16,7 @@ const bookController = {
     // GET
     listar: async (req, res) => {
         try {
-            const getBooks = await Book.find().sort({ createdAt: -1 })
+            const getBooks = await Book.find({ user: req.user._id }).sort({ createdAt: -1 })
 
             res.status(200).json(getBooks)
         } catch (error) {
@@ -27,7 +27,7 @@ const bookController = {
     // GET
     buscarPorId: async (req, res) => {
         try {
-            const getBooksById = await Book.findById(req.params.id);
+            const getBooksById = await Book.findOne({ _id: req.params.id, user: req.user._id });
 
             if (!getBooksById) {
                 return res.status(404).json({ mensagem: "Livro não encontrado" });
@@ -43,7 +43,7 @@ const bookController = {
     atualizar: async (req, res) => {
         try {
             const { id } = req.params;
-            const updatedBook = await Book.findByIdAndUpdate(id, req.body, {
+            const updatedBook = await Book.findOneAndUpdate({ _id: id, user: req.user._id }, req.body, {
                 new: true,
                 runValidators: true
             });
@@ -68,7 +68,7 @@ const bookController = {
                 return res.status(400).json({ mensagem: "ID inválido" });
             }
 
-            const deletedBook = await Book.findByIdAndDelete(id);
+            const deletedBook = await Book.findOneAndDelete({ _id: id, user: req.user._id });
 
             if (!deletedBook) {
                 return res.status(404).json({ mensagem: "Livro não encontrado para exclusão" })
