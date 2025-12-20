@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/books';
+const API_URL = '/books';
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchBooks();
@@ -11,7 +11,7 @@ let allBooks = []; // Store books locally to easier filtering without refetching
 
 async function fetchBooks() {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${API_URL}`);
         allBooks = await response.json();
         renderAllYears(allBooks);
         renderFavorites(allBooks);
