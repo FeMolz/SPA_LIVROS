@@ -1,4 +1,6 @@
-const API_URL = '/books';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/books'
+    : '/books';
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchBooks();
@@ -12,11 +14,14 @@ let allBooks = []; // Store books locally to easier filtering without refetching
 async function fetchBooks() {
     try {
         const response = await fetch(`${API_URL}`);
+        if (!response.ok) throw new Error('Failed to fetch books');
         allBooks = await response.json();
         renderAllYears(allBooks);
         renderFavorites(allBooks);
     } catch (error) {
         console.error('Error fetching books:', error);
+        // Optional: Notify user specifically if it's a connection error
+        // alert('Could not load books. Please check if the backend is running.');
     }
 }
 
