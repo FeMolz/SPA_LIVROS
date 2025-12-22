@@ -123,6 +123,52 @@
         </div>
     </div>
 
+    <!-- Add Year Modal -->
+    <div id="addYearModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-btn" onclick="closeModal('addYearModal')">&times;</span>
+            <h2>Add New Year</h2>
+            <form id="addYearForm">
+                <div class="form-group">
+                    <label for="newYearInput">Year</label>
+                    <input type="number" id="newYearInput" name="newYearInput" min="1900" max="2100" required
+                        placeholder="e.g. 2024">
+                </div>
+                <button type="submit" class="btn-submit">Add Year</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Year Modal -->
+    <div id="editYearModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-btn" onclick="closeModal('editYearModal')">&times;</span>
+            <h2>Edit Year</h2>
+            <form id="editYearForm">
+                <input type="hidden" id="originalYear">
+                <div class="form-group">
+                    <label for="editYearInput">New Year</label>
+                    <input type="number" id="editYearInput" name="editYearInput" min="1900" max="2100" required>
+                </div>
+                <button type="submit" class="btn-submit">Update Year</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <h2>Are you sure?</h2>
+            <p id="confirmationMessage">Do you really want to delete this?</p>
+            <div class="form-actions" style="justify-content: center; gap: 10px; margin-top: 20px; display: flex;">
+                <button class="btn-cancel" onclick="closeModal('confirmationModal')"
+                    style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button id="confirmBtn" class="btn-delete-confirm"
+                    style="background: var(--danger); border: none; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Auth Section -->
     <section id="authSection" class="auth-overlay">
         <div class="auth-box">

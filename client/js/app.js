@@ -29,6 +29,59 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userRegisterForm').addEventListener('submit', handleRegisterUser);
     document.getElementById('forgotForm').addEventListener('submit', handleForgotPassword);
     document.getElementById('resetForm').addEventListener('submit', handleResetPassword);
+
+    const addYearForm = document.getElementById('addYearForm');
+    if (addYearForm) addYearForm.addEventListener('submit', handleAddYearSubmit);
+
+    // Edit Year Listener
+    const editYearForm = document.getElementById('editYearForm');
+    if (editYearForm) {
+        editYearForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const originalYear = document.getElementById('originalYear').value;
+            const newYear = document.getElementById('editYearInput').value;
+
+            if (!newYear || isNaN(newYear)) return;
+
+            console.log("Submitting Edit Year:", { originalYear, newYear });
+
+            try {
+                const response = await fetch(`${API_URL}/year/${originalYear}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ newYear: Number(newYear) })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Logic to handle success
+                    if (window.customAddedYears && window.customAddedYears.has(originalYear)) {
+                        window.customAddedYears.delete(originalYear);
+                        window.customAddedYears.add(newYear);
+                    }
+
+                    closeModal('editYearModal');
+                    await fetchBooks();
+
+                    if (data.result && data.result.modifiedCount > 0) {
+                        alert(`Success! Updated ${data.result.modifiedCount} books to year ${newYear}.`);
+                    } else if (window.customAddedYears.has(newYear)) {
+                        alert(`Success! Renamed empty year to ${newYear}.`);
+                    } else {
+                        alert('Year updated (No books were moved).');
+                    }
+
+                } else {
+                    const err = await response.json();
+                    alert('Error: ' + err.mensagem);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to update year');
+            }
+        });
+    }
 });
 
 function checkAuth() {
@@ -48,7 +101,7 @@ function checkAuth() {
         fetchBooks();
     }
 }
-// ... (skip lines) ...
+
 // Auth Functions
 window.switchAuthTab = (tab) => {
     document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -79,8 +132,6 @@ async function fetchBooks() {
         renderFavorites(allBooks);
     } catch (error) {
         console.error('Error fetching books:', error);
-        // Optional: Notify user specifically if it's a connection error
-        // alert('Could not load books. Please check if the backend is running.');
     }
 }
 
@@ -121,11 +172,12 @@ function showSection(sectionId) {
     }
 }
 
-let currentGenreFilter = 'All';
+let currentGenreFilters = new Set(); // Changed from string 'All' to Set
+let collapsedYears = new Set(); // Track collapsed years
 
 function renderGenresView(books) {
-    const listContainer = document.getElementById('genresList');
     const filtersContainer = document.getElementById('genreFilters');
+    const containerForDropdown = filtersContainer; // Reusing the same container
 
     const genres = new Set();
     books.forEach(book => {
@@ -136,52 +188,84 @@ function renderGenresView(books) {
         }
     });
 
-    filtersContainer.innerHTML = '';
+    // Sort genres alphabetically
+    const sortedGenres = Array.from(genres).sort();
 
-    const allBtn = document.createElement('button');
-    allBtn.classList.add('genre-btn');
-    if (currentGenreFilter === 'All') allBtn.classList.add('active');
-    allBtn.innerText = 'All';
-    allBtn.onclick = () => filterGenres('All');
-    filtersContainer.appendChild(allBtn);
+    // Create Custom Dropdown HTML
+    // Check if dropdown already exists to avoid re-creating it when re-rendering view
+    if (!document.getElementById('customGenreDropdown')) {
+        const dropdownHTML = `
+            <div class="dropdown-container" id="customGenreDropdown">
+                <div class="dropdown-header" onclick="toggleDropdown()">
+                    <span id="dropdownSelectedText">Select Categories</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                <div class="dropdown-list" id="dropdownList">
+                    ${sortedGenres.map(genre => `
+                        <label class="dropdown-item">
+                            <input type="checkbox" value="${genre}" onchange="handleGenreChange(this)">
+                            ${genre}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        containerForDropdown.innerHTML = dropdownHTML;
 
-    Array.from(genres).sort().forEach(genre => {
-        const btn = document.createElement('button');
-        btn.classList.add('genre-btn');
-        if (currentGenreFilter === genre) btn.classList.add('active');
-        btn.innerText = genre;
-        btn.onclick = () => filterGenres(genre);
-        filtersContainer.appendChild(btn);
-    });
-
-    filterGenres(currentGenreFilter, false);
-}
-
-function filterGenres(genre, updateFilters = true) {
-    currentGenreFilter = genre;
-    const listContainer = document.getElementById('genresList');
-
-    if (updateFilters) {
-        const buttons = document.querySelectorAll('.genre-btn');
-        buttons.forEach(btn => {
-            if (btn.innerText === genre) btn.classList.add('active');
-            else btn.classList.remove('active');
+        // Close dropdown when clicking outside - Only add listener ONCE when creating
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('customGenreDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                const list = document.getElementById('dropdownList');
+                if (list) list.classList.remove('show');
+            }
         });
     }
 
+    // Initial Filter Run (in case returning to view)
+    filterGenres();
+}
+
+window.toggleDropdown = () => {
+    const list = document.getElementById('dropdownList');
+    list.classList.toggle('show');
+}
+
+window.handleGenreChange = (checkbox) => {
+    if (checkbox.checked) {
+        currentGenreFilters.add(checkbox.value);
+    } else {
+        currentGenreFilters.delete(checkbox.value);
+    }
+    updateDropdownHeader();
+    filterGenres();
+}
+
+function updateDropdownHeader() {
+    const textSpan = document.getElementById('dropdownSelectedText');
+    if (currentGenreFilters.size === 0) {
+        textSpan.innerText = "Select Categories";
+    } else {
+        textSpan.innerText = `${currentGenreFilters.size} Selected`;
+    }
+}
+
+
+function filterGenres() {
+    const listContainer = document.getElementById('genresList');
+
     let filteredBooks = allBooks;
-    if (genre !== 'All') {
+
+    if (currentGenreFilters.size > 0) {
         filteredBooks = allBooks.filter(book => {
-            if (Array.isArray(book.genero)) {
-                return book.genero.includes(genre);
-            }
-            return book.genero === genre;
+            const bookGenres = Array.isArray(book.genero) ? book.genero : [book.genero];
+            return bookGenres.some(g => currentGenreFilters.has(g));
         });
     }
 
     listContainer.innerHTML = '';
     if (filteredBooks.length === 0) {
-        listContainer.innerHTML = '<p class="no-books-msg">No books found for this genre.</p>';
+        listContainer.innerHTML = '<p class="no-books-msg">No books found for these genres.</p>';
         return;
     }
 
@@ -192,7 +276,15 @@ function filterGenres(genre, updateFilters = true) {
 
 function renderAllYears(books) {
     const container = document.getElementById('allYears');
-    container.innerHTML = '<h2 class="section-title">My Reading Journey</h2>';
+    // Rebuilding Header with Add Year Button
+    container.innerHTML = `
+        <div class="main-header">
+            <h2 class="section-title">My Reading Journey</h2>
+            <button class="btn-add-year" onclick="openAddYearModal()" title="Add a new year">
+                <i class="bi bi-plus-lg"></i> Add Year
+            </button>
+        </div>
+    `;
 
     const booksByYear = books.reduce((acc, book) => {
         const year = book.anoLeitura || 'Unknown';
@@ -201,35 +293,79 @@ function renderAllYears(books) {
         return acc;
     }, {});
 
+    // Sort books by 'order' if it exists
+    Object.keys(booksByYear).forEach(year => {
+        booksByYear[year].sort((a, b) => (a.order || 0) - (b.order || 0));
+    });
+
+    // Include manually added empty years if they exist in a temp cache or just use the current logic (User said "should make it possible to register books IN that new year")
+    // If I add a year via UI, I need it to appear even if empty.
+    // I will use a global set for custom Added years if they don't have books yet.
+    if (!window.customAddedYears) window.customAddedYears = new Set();
+
+    window.customAddedYears.forEach(y => {
+        if (!booksByYear[y]) booksByYear[y] = [];
+    });
+
     const sortedYears = Object.keys(booksByYear).sort((a, b) => b - a);
 
+    // Ensure current year is always there?
     const currentYear = new Date().getFullYear();
     if (!sortedYears.includes(String(currentYear))) {
         sortedYears.unshift(String(currentYear));
         booksByYear[currentYear] = [];
     }
 
-    sortedYears.forEach(year => {
+    if (window.customAddedYears.size > 0) {
+        // Re-sort if we added custom years
+        sortedYears.sort((a, b) => b - a);
+    }
+    // Remove duplicates if any logic created them
+    const uniqueYears = [...new Set(sortedYears)];
+
+    uniqueYears.forEach(year => {
         const yearSection = document.createElement('div');
         yearSection.classList.add('year-section');
+        yearSection.setAttribute('data-year', year);
+        if (collapsedYears.has(String(year))) {
+            yearSection.classList.add('collapsed');
+        }
+
+        const bookCount = booksByYear[year].length;
+        const isCollapsed = collapsedYears.has(String(year));
 
         const yearHeader = document.createElement('div');
         yearHeader.classList.add('year-header');
         yearHeader.innerHTML = `
-            <h3>${year}</h3>
-            <button class="add-book-btn" onclick="openRegisterModal(${year})">
-                <i class="bi bi-plus-lg"></i> Add Book
-            </button>
+            <h3>${year} <span style="font-size: 0.8em; opacity: 0.6; margin-left: 10px;">(${bookCount} books)</span></h3>
+            <div class="year-header-actions">
+                <button class="add-book-btn" onclick="openRegisterModal(${year})">
+                    <i class="bi bi-plus-lg"></i> Add
+                </button>
+                <div class="year-actions-group">
+                    <button class="btn-icon-action" onclick="openEditYearModal('${year}')" title="Edit Year">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-icon-action delete" onclick="deleteYear('${year}')" title="Delete Year">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                 <button class="btn-minimize ${isCollapsed ? 'collapsed' : ''}" onclick="toggleYearCollapse('${year}', this)">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+            </div>
         `;
 
         const booksGrid = document.createElement('div');
         booksGrid.classList.add('books-grid');
 
-        if (booksByYear[year].length === 0) {
+        if (bookCount === 0) {
             booksGrid.innerHTML = '<p class="no-books-msg">No books registered this year yet.</p>';
         } else {
             booksByYear[year].forEach(book => {
-                booksGrid.appendChild(createBookCard(book));
+                const card = createBookCard(book);
+                // DnD attributes removed
+                booksGrid.appendChild(card);
             });
         }
 
@@ -238,6 +374,93 @@ function renderAllYears(books) {
         container.appendChild(yearSection);
     });
 }
+
+window.toggleYearCollapse = (year, btn) => {
+    // Toggle state
+    if (collapsedYears.has(year)) {
+        collapsedYears.delete(year);
+    } else {
+        collapsedYears.add(year);
+    }
+    // Re-render is safer to ensure consistency, but simple class toggle is faster.
+    // However, re-rendering preserves the "State" correctly if we have dynamic updates.
+    // For smoothness, let's just toggle classes closest to the button.
+    const section = btn.closest('.year-section');
+    section.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed');
+};
+
+window.openAddYearModal = () => {
+    document.getElementById('addYearForm').reset();
+    document.getElementById('addYearModal').style.display = 'block';
+};
+
+window.handleAddYearSubmit = (e) => {
+    e.preventDefault();
+    const yearInput = document.getElementById('newYearInput').value;
+
+    if (yearInput && !isNaN(yearInput) && yearInput.length === 4) {
+        if (!window.customAddedYears) window.customAddedYears = new Set();
+        window.customAddedYears.add(yearInput);
+
+        closeModal('addYearModal');
+        // Refresh view
+        renderAllYears(allBooks);
+    } else {
+        alert("Please enter a valid 4-digit year.");
+    }
+};
+
+window.openEditYearModal = (year) => {
+    document.getElementById('editYearForm').reset();
+    document.getElementById('originalYear').value = year;
+    document.getElementById('editYearInput').value = year;
+    document.getElementById('editYearModal').style.display = 'block';
+};
+
+// --- Confirmation Modal Logic ---
+let pendingConfirmationCallback = null;
+
+function openConfirmationModal(message, callback) {
+    document.getElementById('confirmationMessage').innerText = message;
+    pendingConfirmationCallback = callback;
+    document.getElementById('confirmationModal').style.display = 'block';
+}
+
+document.getElementById('confirmBtn').addEventListener('click', async () => {
+    if (pendingConfirmationCallback) {
+        await pendingConfirmationCallback();
+        pendingConfirmationCallback = null;
+    }
+    closeModal('confirmationModal');
+});
+
+window.deleteYear = (year) => {
+    openConfirmationModal(
+        `Are you sure you want to delete the year ${year}? ALL books in this year will be deleted!`,
+        async () => {
+            try {
+                const response = await fetch(`${API_URL}/year/${year}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    alert(`Year ${year} deleted.`);
+                    if (window.customAddedYears) window.customAddedYears.delete(String(year));
+                    fetchBooks();
+                } else {
+                    const err = await response.json();
+                    alert('Error: ' + err.mensagem);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to delete year');
+            }
+        }
+    );
+};
+
 
 function renderFavorites(books) {
     const container = document.getElementById('favoritesList');
@@ -459,23 +682,26 @@ async function handleRegisterSubmit(e) {
 }
 
 async function deleteBook(id) {
-    if (!confirm('Are you sure you want to delete this book?')) return;
+    openConfirmationModal(
+        'Are you sure you want to delete this book?',
+        async () => {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'auth-token': getToken() }
+                });
 
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
-            headers: { 'auth-token': getToken() }
-        });
-
-        if (response.ok) {
-            closeModal('detailsModal');
-            fetchBooks();
-        } else {
-            alert('Error deleting book');
+                if (response.ok) {
+                    closeModal('detailsModal');
+                    fetchBooks();
+                } else {
+                    alert('Error deleting book');
+                }
+            } catch (error) {
+                console.error('Error deleting book:', error);
+            }
         }
-    } catch (error) {
-        console.error('Error deleting book:', error);
-    }
+    );
 }
 // Auth Functions
 window.switchAuthTab = (tab) => {

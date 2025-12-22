@@ -78,6 +78,71 @@ const bookController = {
         } catch (error) {
             res.status(500).json({ mensagem: "Erro ao deletar livro", erro: error.message });
         }
+    },
+
+    // REORDER (Batch Update)
+    reorderBooks: async (req, res) => {
+        try {
+            const { updates } = req.body; // Expecting [{ id: '...', order: 1 }, { id: '...', order: 2 }]
+
+            if (!Array.isArray(updates)) {
+                return res.status(400).json({ mensagem: "Formato inválido para reordenação" });
+            }
+
+            const bulkOps = updates.map(update => ({
+                updateOne: {
+                    filter: { _id: update.id, user: req.user._id },
+                    update: { order: update.order }
+                }
+            }));
+
+            await Book.bulkWrite(bulkOps);
+
+            res.status(200).json({ mensagem: "Ordem atualizada com sucesso" });
+        } catch (error) {
+            res.status(500).json({ mensagem: "Erro ao reordenar livros", erro: error.message });
+        }
+    },
+
+    // UPDATE YEAR Name
+    updateYear: async (req, res) => {
+        try {
+            const { year } = req.params;
+            const { newYear } = req.body;
+
+            if (!year || !newYear) {
+                console.log("UpdateYear Failed: Missing fields", { year, newYear });
+                return res.status(400).json({ mensagem: "Ano atual e novo ano são obrigatórios" });
+            }
+
+            console.log(`UpdateYear: Updating ${year} to ${newYear} for user ${req.user._id}`);
+
+            const result = await Book.updateMany(
+                { anoLeitura: Number(year), user: req.user._id },
+                { $set: { anoLeitura: Number(newYear) } }
+            );
+
+            res.status(200).json({ mensagem: "Ano atualizado com sucesso", result });
+        } catch (error) {
+            res.status(500).json({ mensagem: "Erro ao atualizar ano", erro: error.message });
+        }
+    },
+
+    // DELETE YEAR (Delete all books in Year)
+    deleteBooksByYear: async (req, res) => {
+        try {
+            const { year } = req.params;
+
+            if (!year) {
+                return res.status(400).json({ mensagem: "Ano é obrigatório" });
+            }
+
+            const result = await Book.deleteMany({ anoLeitura: year, user: req.user._id });
+
+            res.status(200).json({ mensagem: "Livros do ano excluídos com sucesso", result });
+        } catch (error) {
+            res.status(500).json({ mensagem: "Erro ao excluir livros do ano", erro: error.message });
+        }
     }
 };
 
