@@ -6,6 +6,10 @@ const AUTH_URL = window.location.hostname === 'localhost' || window.location.hos
     ? 'http://localhost:3000/api/user'
     : '/api/user';
 
+const FRIENDS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api/friends'
+    : '/api/friends';
+
 function getToken() {
     return localStorage.getItem('auth-token');
 }
@@ -169,6 +173,8 @@ function showSection(sectionId) {
         renderFavorites(allBooks);
     } else if (sectionId === 'genres') {
         renderGenresView(allBooks);
+    } else if (sectionId === 'friends') {
+        loadFriendsView();
     }
 }
 

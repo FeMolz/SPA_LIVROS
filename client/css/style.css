@@ -147,7 +147,7 @@ main {
 /* Year Sections */
 .year-section {
     margin-bottom: 50px;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.05);
     padding: 30px;
     border-radius: 20px;
     border: var(--glass-border);
@@ -160,7 +160,7 @@ main {
     align-items: center;
     margin-bottom: 25px;
     padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .year-header h3 {

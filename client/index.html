@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/friends.css">
     <link rel="icon" type="image/png" href="assets/img/books.png">
     <title>Gerenciador de Livros</title>
 </head>
@@ -20,6 +21,10 @@
                 <li class="itens-sidebar active">
                     <i class="bi bi-clock-history"></i>
                     <a href="#allYears">All Years</a>
+                </li>
+                <li class="itens-sidebar">
+                    <i class="bi bi-people"></i>
+                    <a href="#friends">Friends</a>
                 </li>
                 <li class="itens-sidebar">
                     <i class="bi bi-journal-bookmark"></i>
@@ -52,6 +57,37 @@
             <div id="genreFilters" class="genre-filters">
             </div>
             <div id="genresList" class="books-grid">
+            </div>
+        </section>
+
+        <section id="friends">
+            <div class="main-header">
+                <h2 class="section-title">My Friends</h2>
+            </div>
+
+            <div class="friends-container">
+                <div class="friends-sidebar">
+                    <div class="search-box">
+                        <input type="text" id="userSearchInput" placeholder="Find a friend...">
+                        <button onclick="searchUsers()"><i class="bi bi-search"></i></button>
+                    </div>
+                    <div id="searchResults" class="search-results-list"></div>
+
+                    <div id="friendRequestsSection" style="display:none;">
+                        <h4>Requests</h4>
+                        <div id="friendRequestsList" class="requests-list"></div>
+                    </div>
+
+                    <h4 style="margin-top: 20px;">Your Friends</h4>
+                    <div id="friendsList" class="friends-list"></div>
+                </div>
+
+                <div class="friends-content" id="friendContentArea">
+                    <div class="placeholder-message">
+                        <i class="bi bi-people" style="font-size: 3rem; opacity: 0.5;"></i>
+                        <p>Select a friend to view their books</p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -238,6 +274,7 @@
     </section>
 
     <script src="js/sidebar.js"></script>
+    <script src="js/friends_logic.js"></script>
     <script src="js/app.js"></script>
 </body>
 

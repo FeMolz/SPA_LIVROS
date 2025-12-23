@@ -1,0 +1,105 @@
+/* Friends Section */
+.friends-container {
+    display: flex;
+    gap: 30px;
+    height: calc(100vh - 140px);
+}
+
+.friends-sidebar {
+    width: 300px;
+    background: rgba(30, 30, 46, 0.5);
+    border-radius: 20px;
+    padding: 20px;
+    border: var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.friends-content {
+    flex: 1;
+    background: rgba(30, 30, 46, 0.5);
+    border-radius: 20px;
+    padding: 30px;
+    border: var(--glass-border);
+    overflow-y: auto;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.search-box button {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+}
+
+.user-card,
+.request-card,
+.friend-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s;
+}
+
+.friend-card {
+    cursor: pointer;
+}
+
+.friend-card:hover,
+.friend-card.active {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color);
+}
+
+.card-info h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.card-info span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.btn-small {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    background: var(--success);
+    color: white;
+}
+
+.placeholder-message {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    text-align: center;
+}
