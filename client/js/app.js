@@ -197,8 +197,7 @@ function renderGenresView(books) {
     // Sort genres alphabetically
     const sortedGenres = Array.from(genres).sort();
 
-    // Create Custom Dropdown HTML
-    // Check if dropdown already exists to avoid re-creating it when re-rendering view
+    // Check if dropdown container exists, if not create it (structure only)
     if (!document.getElementById('customGenreDropdown')) {
         const dropdownHTML = `
             <div class="dropdown-container" id="customGenreDropdown">
@@ -206,19 +205,19 @@ function renderGenresView(books) {
                     <span id="dropdownSelectedText">Select Categories</span>
                     <i class="bi bi-chevron-down"></i>
                 </div>
-                <div class="dropdown-list" id="dropdownList">
-                    ${sortedGenres.map(genre => `
-                        <label class="dropdown-item">
-                            <input type="checkbox" value="${genre}" onchange="handleGenreChange(this)">
-                            ${genre}
-                        </label>
-                    `).join('')}
+                 <div class="dropdown-list" id="dropdownList">
+                    <div style="padding: 8px;">
+                        <input type="text" id="genreSearchInput" placeholder="Search genres..." 
+                               style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white;"
+                               onkeyup="filterGenreOptions(this)">
+                    </div>
+                    <div id="genreOptionsList"></div>
                 </div>
             </div>
         `;
         containerForDropdown.innerHTML = dropdownHTML;
 
-        // Close dropdown when clicking outside - Only add listener ONCE when creating
+        // Close dropdown when clicking outside
         document.addEventListener('click', function (e) {
             const dropdown = document.getElementById('customGenreDropdown');
             if (dropdown && !dropdown.contains(e.target)) {
@@ -228,8 +227,35 @@ function renderGenresView(books) {
         });
     }
 
-    // Initial Filter Run (in case returning to view)
+    // Always update list options
+    renderGenreOptions(sortedGenres);
+    updateDropdownHeader();
+
+    // Initial Filter Run
     filterGenres();
+}
+
+function renderGenreOptions(genresList) {
+    const listContainer = document.getElementById('genreOptionsList');
+    listContainer.innerHTML = genresList.map(genre => `
+        <label class="dropdown-item">
+            <input type="checkbox" value="${genre}" onchange="handleGenreChange(this)" ${currentGenreFilters.has(genre) ? 'checked' : ''}>
+            ${genre}
+        </label>
+    `).join('');
+}
+
+window.filterGenreOptions = (input) => {
+    const filter = input.value.toLowerCase();
+    const items = document.querySelectorAll('.dropdown-item');
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        if (text.includes(filter)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 }
 
 window.toggleDropdown = () => {

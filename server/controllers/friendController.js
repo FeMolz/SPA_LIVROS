@@ -125,3 +125,24 @@ export const getFriendBooks = async (req, res) => {
         res.status(500).send(err.message);
     }
 };
+
+export const removeFriend = async (req, res) => {
+    try {
+        const friendId = req.params.friendId;
+
+        await User.findByIdAndUpdate(req.user._id, { $pull: { friends: friendId } });
+        await User.findByIdAndUpdate(friendId, { $pull: { friends: req.user._id } });
+
+        // Also remove any friend requests between them (optional but cleaner)
+        await FriendRequest.deleteMany({
+            $or: [
+                { sender: req.user._id, receiver: friendId },
+                { sender: friendId, receiver: req.user._id }
+            ]
+        });
+
+        res.send("Friend removed");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+};

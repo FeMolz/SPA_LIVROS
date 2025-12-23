@@ -152,7 +152,10 @@ function renderFriendsList(friends) {
                 <h5>${friend.name}</h5>
                 <span>${friend.email}</span>
             </div>
-            <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <i class="bi bi-person-dash" onclick="event.stopPropagation(); unfriendUser('${friend._id}', '${friend.name}')" style="color: var(--danger); opacity: 0.7; cursor: pointer;" title="Unfriend"></i>
+                <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+            </div>
         `;
         container.appendChild(card);
     });
@@ -201,13 +204,26 @@ function renderFriendBooks(friend, books) {
 
     const sortedYears = Object.keys(booksByYear).sort((a, b) => b - a);
 
+    // Add Unfriend Button to Header
+    html += `
+        <div style="margin-bottom: 20px;">
+            <button onclick="unfriendUser('${friend._id}', '${friend.name}')" style="background: rgba(255, 118, 117, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+                <i class="bi bi-person-dash"></i> Unfriend
+            </button>
+        </div>
+    `;
+
     sortedYears.forEach(year => {
+        const isCollapsed = collapsedYears.has(`friend-${year}`);
         html += `
-            <div class="year-section">
+            <div class="year-section ${isCollapsed ? 'collapsed' : ''}" data-year="${year}">
                 <div class="year-header">
                      <h3>${year} <span style="font-size: 0.8em; opacity: 0.6; margin-left: 10px;">(${booksByYear[year].length} books)</span></h3>
+                     <button class="btn-minimize ${isCollapsed ? 'collapsed' : ''}" onclick="toggleFriendYearCollapse('${year}', this)">
+                        <i class="bi bi-chevron-up"></i>
+                    </button>
                 </div>
-                <div class="books-grid">
+                <div class="books-grid" style="${isCollapsed ? 'display:none;' : ''}">
                     ${booksByYear[year].map(book => createReadOnlyBookCard(book)).join('')}
                 </div>
             </div>
@@ -215,6 +231,50 @@ function renderFriendBooks(friend, books) {
     });
 
     container.innerHTML = html;
+}
+
+window.toggleFriendYearCollapse = (year, btn) => {
+    const key = `friend-${year}`;
+    if (collapsedYears.has(key)) {
+        collapsedYears.delete(key);
+    } else {
+        collapsedYears.add(key);
+    }
+    const section = btn.closest('.year-section');
+    section.classList.toggle('collapsed');
+    btn.classList.toggle('collapsed');
+
+    // Manually toggle grid visibility for immediate effect without re-render
+    const grid = section.querySelector('.books-grid');
+    if (grid) {
+        grid.style.display = section.classList.contains('collapsed') ? 'none' : 'grid';
+    }
+}
+
+window.unfriendUser = async (friendId, friendName) => {
+    if (!confirm(`Are you sure you want to remove ${friendName} from your friends?`)) return;
+
+    try {
+        const response = await fetch(`${FRIENDS_URL}/${friendId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            alert(`${friendName} removed.`);
+            loadFriendsView(); // Reload list
+            document.getElementById('friendContentArea').innerHTML = `
+                <div class="placeholder-message">
+                    <i class="bi bi-people" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <p>Select a friend to view their books</p>
+                </div>
+            `;
+        } else {
+            alert('Failed to remove friend');
+        }
+    } catch (error) {
+        console.error('Error removing friend:', error);
+    }
 }
 
 function createReadOnlyBookCard(book) {
