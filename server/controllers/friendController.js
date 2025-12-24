@@ -84,8 +84,12 @@ export const acceptRequest = async (req, res) => {
         const sender = await User.findById(request.sender);
         const receiver = await User.findById(request.receiver);
 
-        sender.friends.push(receiver._id);
-        receiver.friends.push(sender._id);
+        if (!sender.friends.includes(receiver._id)) {
+            sender.friends.push(receiver._id);
+        }
+        if (!receiver.friends.includes(sender._id)) {
+            receiver.friends.push(sender._id);
+        }
 
         await sender.save();
         await receiver.save();
@@ -98,7 +102,19 @@ export const acceptRequest = async (req, res) => {
 
 export const getFriends = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('friends', 'name email');
+        const user = await User.findById(req.user._id);
+
+        // Deduplicate friends list (self-healing)
+        const uniqueFriends = [...new Set(user.friends.map(id => id.toString()))];
+
+        if (uniqueFriends.length !== user.friends.length) {
+            user.friends = uniqueFriends;
+            await user.save();
+        }
+
+        // populate after ensuring uniqueness
+        await user.populate('friends', 'name email');
+
         res.json(user.friends);
     } catch (err) {
         res.status(500).send(err.message);
