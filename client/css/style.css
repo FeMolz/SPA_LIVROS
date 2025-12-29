@@ -996,3 +996,30 @@ section.active-section {
 .book-card {
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s;
 }
+
+/* Password Toggle */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+    /* Make space for the eye icon */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}

@@ -224,7 +224,11 @@
                     <input type="email" id="loginEmail" placeholder="Email" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="bi bi-eye-slash toggle-password"
+                            onclick="togglePasswordVisibility('loginPassword', this)"></i>
+                    </div>
                 </div>
                 <button type="submit" class="btn-submit">Login</button>
                 <div style="text-align: center; margin-top: 15px;">
@@ -241,7 +245,11 @@
                     <input type="email" id="registerEmail" placeholder="Email" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="registerPassword" placeholder="Password" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="registerPassword" placeholder="Password" required>
+                        <i class="bi bi-eye-slash toggle-password"
+                            onclick="togglePasswordVisibility('registerPassword', this)"></i>
+                    </div>
                 </div>
                 <button type="submit" class="btn-submit">Create Account</button>
             </form>

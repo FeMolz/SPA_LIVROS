@@ -796,17 +796,30 @@ async function handleRegisterUser(e) {
         });
 
         if (response.ok) {
-            alert('Registration successful! Please login.');
             switchAuthTab('login');
         } else {
-            const err = await response.text();
-            alert('Registration failed: ' + err);
+            const err = await response.json();
+            alert('Error: ' + err.mensagem);
         }
     } catch (error) {
         console.error('Registration error:', error);
         alert('Registration error');
     }
 }
+
+window.togglePasswordVisibility = (inputId, icon) => {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+    } else {
+        input.type = "password";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+    }
+};
+
 
 async function handleForgotPassword(e) {
     e.preventDefault();
