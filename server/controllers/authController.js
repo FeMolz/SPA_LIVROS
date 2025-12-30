@@ -11,12 +11,12 @@ export const register = async (req, res) => {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).send('Invalid email format');
+            return res.status(400).json({ mensagem: 'Invalid email format' });
         }
 
         // Check if user already exists
         const emailExist = await User.findOne({ email });
-        if (emailExist) return res.status(400).send('Email already exists');
+        if (emailExist) return res.status(400).json({ mensagem: 'Email already exists' });
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
@@ -32,7 +32,7 @@ export const register = async (req, res) => {
         const savedUser = await user.save();
         res.send({ user: user._id });
     } catch (err) {
-        res.status(400).send(err);
+        res.status(400).json({ mensagem: err.message || 'Error occurred' });
     }
 };
 
